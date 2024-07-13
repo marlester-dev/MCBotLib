@@ -42,3 +42,5 @@ bot.connect();
 For more please see the javadoc and MCProtocolLib's wiki.  
 Don't be shy to ask questions in the issues tab.  
 You may visit #mcprotocollib channel in [Geyser's discord server](https://discord.gg/geysermc), if you have questions about how MCProtocolLib functions.
+
+A lot of code was taken from [SoulFire](https://github.com/AlexProgrammerDE/SoulFire).
