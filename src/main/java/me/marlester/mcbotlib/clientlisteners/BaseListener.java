@@ -30,7 +30,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import me.marlester.mcbotlib.Bot;
 import me.marlester.mcbotlib.registryresources.BuiltInKnownPackRegistry;
 import net.kyori.adventure.text.Component;
 import org.geysermc.mcprotocollib.network.Session;
