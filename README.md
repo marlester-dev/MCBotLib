@@ -10,6 +10,9 @@ repositories {
     maven {
         url "https://jitpack.io"
     }
+    maven {
+        url "https://repo.opencollab.dev/maven-releases/"
+    }
 }
 
 dependencies {
@@ -21,6 +24,9 @@ dependencies {
 repositories {
     maven {
         url = uri("https://jitpack.io")
+    }
+    maven {
+        url = uri("https://repo.opencollab.dev/maven-releases/")
     }
 }
 
