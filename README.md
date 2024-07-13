@@ -36,4 +36,8 @@ bot.connect();
 ```
 
 [Adding authentication details to the bot](https://github.com/marlester-dev/MCBotLib/wiki/Adding-auth-details)  
-[Customizing the bot](https://github.com/marlester-dev/MCBotLib/wiki/Customizing-our-bot)
+[Adding proxy to the bot](https://github.com/marlester-dev/MCBotLib/wiki/Adding-proxy)
+
+For more please see the javadoc and MCProtocolLib's wiki.  
+You may ask questions on [Geyser's discord](https://discord.gg/geysermc) server and visit #mcprotocollib channel, if you have questions about how MCProtocolLib functions.
+Don't be shy to ask questions in the issues tab.
