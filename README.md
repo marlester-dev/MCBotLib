@@ -39,5 +39,5 @@ bot.connect();
 [Adding proxy to the bot](https://github.com/marlester-dev/MCBotLib/wiki/Adding-proxy)
 
 For more please see the javadoc and MCProtocolLib's wiki.  
+Don't be shy to ask questions in the issues tab.  
 You may ask questions on [Geyser's discord](https://discord.gg/geysermc) server and visit #mcprotocollib channel, if you have questions about how MCProtocolLib functions.
-Don't be shy to ask questions in the issues tab.
