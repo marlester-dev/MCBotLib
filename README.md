@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.marlester-dev:MCBotLib:1.0.0'
+    implementation 'com.github.marlester-dev:MCBotLib:1.0.2'
 }
 ```
 **Kotlin DSL:**
@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.marlester-dev:MCBotLib:1.0.0")
+    implementation("com.github.marlester-dev:MCBotLib:1.0.2")
 }
 ```
 
