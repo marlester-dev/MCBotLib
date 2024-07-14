@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.marlester-dev:MCBotLib:1.0.2'
+    implementation 'com.github.marlester-dev:MCBotLib:version_here'
 }
 ```
 **Kotlin DSL:**
@@ -31,9 +31,10 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.marlester-dev:MCBotLib:1.0.2")
+    implementation("com.github.marlester-dev:MCBotLib:version_here")
 }
 ```
+Please see the latest version number on the [releases page](https://github.com/marlester-dev/MCBotLib/releases/latest).
 
 ##### Creating a simple bot with the nick "Steve" and letting it join a server with the ip of 6.113.148.5 and port 22605:
 ```java
