@@ -1,5 +1,7 @@
 [![MCBotLib](https://github.com/user-attachments/assets/6b9d0abe-651c-42d2-9d4c-e714dfbbe9f7)]()
 
+[![](https://jitpack.io/v/marlester-dev/MCBotLib.svg)](https://jitpack.io/#marlester-dev/MCBotLib)
+
 This is a very simple library to add bots to Minecraft servers.  
 It uses [MCProtocolLib](https://github.com/GeyserMC/MCProtocolLib).
 
