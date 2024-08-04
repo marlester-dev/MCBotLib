@@ -9,13 +9,13 @@ version = '1.0.3'
 repositories {
     mavenCentral()
     maven {
-        url "https://repo.opencollab.dev/maven-releases/"
+        url 'https://repo.opencollab.dev/maven-releases/'
     }
     maven {
-        url "https://repo.opencollab.dev/maven-snapshots/"
+        url 'https://repo.opencollab.dev/maven-snapshots/'
     }
     maven {
-        url "https://jitpack.io"
+        url 'https://jitpack.io'
     }
 }
 
@@ -38,8 +38,8 @@ publishing {
 }
 
 dependencies {
-    compileOnly "org.jetbrains:annotations:24.1.0"
-    compileOnly "org.projectlombok:lombok:1.18.32"
-    annotationProcessor "org.projectlombok:lombok:1.18.32"
-    api "com.github.AlexProgrammerDE:MCProtocolLib:576b311"
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+    api 'com.github.AlexProgrammerDE:MCProtocolLib:576b311'
 }
