@@ -101,15 +101,17 @@ public class BaseListener extends SessionAdapter {
           throw new IllegalStateException("Failed to generate shared key.", e);
         }
 
-        SessionService
-            sessionService = session.getFlag(MinecraftConstants.SESSION_SERVICE_KEY, new SessionService());
-        String serverId = SessionService.getServerId(helloPacket.getServerId(), helloPacket.getPublicKey(), key);
+        SessionService sessionService = session.getFlag(MinecraftConstants.SESSION_SERVICE_KEY,
+            new SessionService());
+        String serverId = SessionService.getServerId(helloPacket.getServerId(),
+            helloPacket.getPublicKey(), key);
 
         // ODOT: Add generic error, disabled multiplayer and banned from playing online errors
         try {
           sessionService.joinServer(profile, accessToken, serverId);
         } catch (IOException e) {
-          session.disconnect(Component.translatable("disconnect.loginFailedInfo", Component.text(e.getMessage())), e);
+          session.disconnect(Component.translatable("disconnect.loginFailedInfo",
+                  Component.text(e.getMessage())), e);
           return;
         }
 
@@ -121,7 +123,8 @@ public class BaseListener extends SessionAdapter {
         // MCBotLib end
       } else if (packet instanceof ClientboundGameProfilePacket) {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.CONFIGURATION));
-        session.send(new ServerboundLoginAcknowledgedPacket(), () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
+        session.send(new ServerboundLoginAcknowledgedPacket(),
+            () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
       } else if (packet instanceof ClientboundLoginDisconnectPacket loginDisconnectPacket) {
         session.disconnect(loginDisconnectPacket.getReason());
       } else if (packet instanceof ClientboundLoginCompressionPacket loginCompressionPacket) {
@@ -138,7 +141,7 @@ public class BaseListener extends SessionAdapter {
         session.send(new ServerboundPingRequestPacket(System.currentTimeMillis()));
       } else if (packet instanceof ClientboundPongResponsePacket pongResponsePacket) {
         long time = System.currentTimeMillis() - pongResponsePacket.getPingTime();
-        ServerPingTimeHandler handler = session.getFlag(MinecraftConstants.SERVER_PING_TIME_HANDLER_KEY);
+        var handler = session.getFlag(MinecraftConstants.SERVER_PING_TIME_HANDLER_KEY);
         if (handler != null) {
           handler.handle(session, time);
         }
@@ -146,31 +149,38 @@ public class BaseListener extends SessionAdapter {
         session.disconnect(Component.translatable("multiplayer.status.finished"));
       }
     } else if (protocol.getInboundState() == ProtocolState.GAME) {
-      if (packet instanceof ClientboundKeepAlivePacket keepAlivePacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+      if (packet instanceof ClientboundKeepAlivePacket keepAlivePacket &&
+          session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
         session.send(new ServerboundKeepAlivePacket(keepAlivePacket.getPingId()));
-      } else if (packet instanceof ClientboundPingPacket pingPacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+      } else if (packet instanceof ClientboundPingPacket pingPacket &&
+          session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
         session.send(new ServerboundPongPacket(pingPacket.getId()));
       } else if (packet instanceof ClientboundDisconnectPacket disconnectPacket) {
         session.disconnect(disconnectPacket.getReason());
       } else if (packet instanceof ClientboundStartConfigurationPacket) {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.CONFIGURATION));
-        session.send(new ServerboundConfigurationAcknowledgedPacket(), () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
+        session.send(new ServerboundConfigurationAcknowledgedPacket(),
+            () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
       } else if (packet instanceof ClientboundTransferPacket transferPacket) {
         if (session.getFlag(MinecraftConstants.FOLLOW_TRANSFERS, true)) {
-          TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(), transferPacket.getPort(), session.getPacketProtocol());
+          TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(),
+              transferPacket.getPort(), session.getPacketProtocol());
           newSession.setFlags(session.getFlags());
           session.disconnect(Component.translatable("disconnect.transfer"));
           newSession.connect(true, true);
         }
       }
     } else if (protocol.getInboundState() == ProtocolState.CONFIGURATION) {
-      if (packet instanceof ClientboundKeepAlivePacket keepAlivePacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+      if (packet instanceof ClientboundKeepAlivePacket keepAlivePacket &&
+          session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
         session.send(new ServerboundKeepAlivePacket(keepAlivePacket.getPingId()));
-      } else if (packet instanceof ClientboundPingPacket pingPacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+      } else if (packet instanceof ClientboundPingPacket pingPacket &&
+          session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
         session.send(new ServerboundPongPacket(pingPacket.getId()));
       } else if (packet instanceof ClientboundFinishConfigurationPacket) {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.GAME));
-        session.send(new ServerboundFinishConfigurationPacket(), () -> protocol.setOutboundState(ProtocolState.GAME));
+        session.send(new ServerboundFinishConfigurationPacket(),
+            () -> protocol.setOutboundState(ProtocolState.GAME));
       } else if (packet instanceof ClientboundSelectKnownPacks selectKnownPacks) {
         /* MCBotLib start */
         if (session.getFlag(MinecraftConstants.SEND_BLANK_KNOWN_PACKS_RESPONSE, true)) {
@@ -182,7 +192,9 @@ public class BaseListener extends SessionAdapter {
         /* MCBotLib end */
       } else if (packet instanceof ClientboundTransferPacket transferPacket) {
         if (session.getFlag(MinecraftConstants.FOLLOW_TRANSFERS, true)) {
-          TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(), transferPacket.getPort(), session.getPacketProtocol());
+          TcpClientSession newSession =
+              new TcpClientSession(transferPacket.getHost(), transferPacket.getPort(),
+                  session.getPacketProtocol());
           newSession.setFlags(session.getFlags());
           session.disconnect(Component.translatable("disconnect.transfer"));
           newSession.connect(true, true);
@@ -195,11 +207,13 @@ public class BaseListener extends SessionAdapter {
   public void connected(ConnectedEvent event) {
     Session session = event.getSession();
     MinecraftProtocol protocol = (MinecraftProtocol) session.getPacketProtocol();
-    ClientIntentionPacket intention = new ClientIntentionPacket(protocol.getCodec().getProtocolVersion(), session.getHost(), session.getPort(), switch (targetState) {
-      case LOGIN -> transferring ? HandshakeIntent.TRANSFER : HandshakeIntent.LOGIN;
-      case STATUS -> HandshakeIntent.STATUS;
-      default -> throw new IllegalStateException("Unexpected value: " + targetState);
-    });
+    ClientIntentionPacket intention =
+        new ClientIntentionPacket(protocol.getCodec().getProtocolVersion(), session.getHost(),
+            session.getPort(), switch (targetState) {
+          case LOGIN -> transferring ? HandshakeIntent.TRANSFER : HandshakeIntent.LOGIN;
+          case STATUS -> HandshakeIntent.STATUS;
+          default -> throw new IllegalStateException("Unexpected value: " + targetState);
+        });
 
     switch (this.targetState) {
       case LOGIN -> {
