@@ -42,9 +42,8 @@ public class BuiltInKnownPackRegistry {
   private final Map<Key, Map<Key, Pair<KnownPack, NbtMap>>> builtInRegistry = new HashMap<>();
 
   public BuiltInKnownPackRegistry() {
-    var byteArrayInputStream =
-        new ByteArrayInputStream(
-            ResourceHelper.getResourceAsBytes("minecraft/builtin_packs.bin.zip"));
+    var byteArrayInputStream = new ByteArrayInputStream(ResourceHelper.getResourceAsBytes(
+        "minecraft/builtin_packs.bin.zip"));
     try (var gzipInputStream = new GZIPInputStream(byteArrayInputStream)) {
       var bytes = gzipInputStream.readAllBytes();
       var in = Unpooled.wrappedBuffer(bytes);
