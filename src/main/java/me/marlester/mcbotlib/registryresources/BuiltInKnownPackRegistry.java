@@ -21,7 +21,6 @@ package me.marlester.mcbotlib.registryresources;
 
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
