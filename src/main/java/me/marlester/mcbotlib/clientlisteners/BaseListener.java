@@ -19,11 +19,7 @@
 
 package me.marlester.mcbotlib.clientlisteners;
 
-import com.github.steveice10.mc.auth.data.GameProfile;
-import com.github.steveice10.mc.auth.exception.request.InvalidCredentialsException;
-import com.github.steveice10.mc.auth.exception.request.RequestException;
-import com.github.steveice10.mc.auth.exception.request.ServiceUnavailableException;
-import com.github.steveice10.mc.auth.service.SessionService;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import javax.crypto.KeyGenerator;
@@ -32,6 +28,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import me.marlester.mcbotlib.registryresources.BuiltInKnownPackRegistry;
 import net.kyori.adventure.text.Component;
+import org.geysermc.mcprotocollib.auth.GameProfile;
+import org.geysermc.mcprotocollib.auth.SessionService;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.crypt.AESEncryption;
 import org.geysermc.mcprotocollib.network.event.session.ConnectedEvent;
@@ -46,6 +44,7 @@ import org.geysermc.mcprotocollib.protocol.data.UnexpectedEncryptionException;
 import org.geysermc.mcprotocollib.protocol.data.handshake.HandshakeIntent;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.handler.ServerInfoHandler;
+import org.geysermc.mcprotocollib.protocol.data.status.handler.ServerPingTimeHandler;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundKeepAlivePacket;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundPingPacket;
@@ -102,40 +101,27 @@ public class BaseListener extends SessionAdapter {
           throw new IllegalStateException("Failed to generate shared key.", e);
         }
 
-        SessionService sessionService = session.getFlag(MinecraftConstants.SESSION_SERVICE_KEY,
-            new SessionService());
-        String serverId = sessionService.getServerId(helloPacket.getServerId(),
-            helloPacket.getPublicKey(), key);
+        SessionService
+            sessionService = session.getFlag(MinecraftConstants.SESSION_SERVICE_KEY, new SessionService());
+        String serverId = SessionService.getServerId(helloPacket.getServerId(), helloPacket.getPublicKey(), key);
 
-        // TODO: Add disabled multiplayer and banned from playing online errors
+        // ODOT: Add generic error, disabled multiplayer and banned from playing online errors
         try {
           sessionService.joinServer(profile, accessToken, serverId);
-        } catch (ServiceUnavailableException e) {
-          session.disconnect(Component.translatable("disconnect.loginFailedInfo",
-                  Component.translatable("disconnect.loginFailedInfo.serversUnavailable")), e);
-          return;
-        } catch (InvalidCredentialsException e) {
-          session.disconnect(Component.translatable("disconnect.loginFailedInfo",
-              Component.translatable("disconnect.loginFailedInfo.invalidSession")), e);
-          return;
-        } catch (RequestException e) {
-          session.disconnect(Component.translatable("disconnect.loginFailedInfo",
-                  Component.text(e.getMessage())), e);
+        } catch (IOException e) {
+          session.disconnect(Component.translatable("disconnect.loginFailedInfo", Component.text(e.getMessage())), e);
           return;
         }
 
+        // MCBotLib start
         var keyPacket = new ServerboundKeyPacket(helloPacket.getPublicKey(), key,
             helloPacket.getChallenge());
         var encryption = new AESEncryption(key);
         session.send(keyPacket, () -> session.enableEncryption(encryption));
+        // MCBotLib end
       } else if (packet instanceof ClientboundGameProfilePacket) {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.CONFIGURATION));
-        session.send(new ServerboundLoginAcknowledgedPacket());
-        session.switchOutboundProtocol(
-            () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
-
-        // Send client brand here
-        // Send client information here
+        session.send(new ServerboundLoginAcknowledgedPacket(), () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
       } else if (packet instanceof ClientboundLoginDisconnectPacket loginDisconnectPacket) {
         session.disconnect(loginDisconnectPacket.getReason());
       } else if (packet instanceof ClientboundLoginCompressionPacket loginCompressionPacket) {
@@ -152,7 +138,7 @@ public class BaseListener extends SessionAdapter {
         session.send(new ServerboundPingRequestPacket(System.currentTimeMillis()));
       } else if (packet instanceof ClientboundPongResponsePacket pongResponsePacket) {
         long time = System.currentTimeMillis() - pongResponsePacket.getPingTime();
-        var handler = session.getFlag(MinecraftConstants.SERVER_PING_TIME_HANDLER_KEY);
+        ServerPingTimeHandler handler = session.getFlag(MinecraftConstants.SERVER_PING_TIME_HANDLER_KEY);
         if (handler != null) {
           handler.handle(session, time);
         }
@@ -160,36 +146,33 @@ public class BaseListener extends SessionAdapter {
         session.disconnect(Component.translatable("multiplayer.status.finished"));
       }
     } else if (protocol.getInboundState() == ProtocolState.GAME) {
-      if (packet instanceof ClientboundKeepAlivePacket keepAlivePacket
-          && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+      if (packet instanceof ClientboundKeepAlivePacket keepAlivePacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
         session.send(new ServerboundKeepAlivePacket(keepAlivePacket.getPingId()));
+      } else if (packet instanceof ClientboundPingPacket pingPacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+        session.send(new ServerboundPongPacket(pingPacket.getId()));
       } else if (packet instanceof ClientboundDisconnectPacket disconnectPacket) {
         session.disconnect(disconnectPacket.getReason());
       } else if (packet instanceof ClientboundStartConfigurationPacket) {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.CONFIGURATION));
-        session.send(new ServerboundConfigurationAcknowledgedPacket());
-        session.switchOutboundProtocol(
-            () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
+        session.send(new ServerboundConfigurationAcknowledgedPacket(), () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
       } else if (packet instanceof ClientboundTransferPacket transferPacket) {
         if (session.getFlag(MinecraftConstants.FOLLOW_TRANSFERS, true)) {
-          TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(),
-              transferPacket.getPort(), session.getPacketProtocol());
+          TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(), transferPacket.getPort(), session.getPacketProtocol());
           newSession.setFlags(session.getFlags());
           session.disconnect(Component.translatable("disconnect.transfer"));
           newSession.connect(true, true);
         }
-        /* MCBotLib start: add response to ClientboundPingPacket */
-      } else if (packet instanceof ClientboundPingPacket pingPacket) {
-        session.send(new ServerboundPongPacket(pingPacket.getId()));
       }
-      /* MCBotLib end */
     } else if (protocol.getInboundState() == ProtocolState.CONFIGURATION) {
-      if (packet instanceof ClientboundFinishConfigurationPacket) {
+      if (packet instanceof ClientboundKeepAlivePacket keepAlivePacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+        session.send(new ServerboundKeepAlivePacket(keepAlivePacket.getPingId()));
+      } else if (packet instanceof ClientboundPingPacket pingPacket && session.getFlag(MinecraftConstants.AUTOMATIC_KEEP_ALIVE_MANAGEMENT, true)) {
+        session.send(new ServerboundPongPacket(pingPacket.getId()));
+      } else if (packet instanceof ClientboundFinishConfigurationPacket) {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.GAME));
-        session.send(new ServerboundFinishConfigurationPacket());
-        session.switchOutboundProtocol(() -> protocol.setOutboundState(ProtocolState.GAME));
-        /* MCBotLib start */
+        session.send(new ServerboundFinishConfigurationPacket(), () -> protocol.setOutboundState(ProtocolState.GAME));
       } else if (packet instanceof ClientboundSelectKnownPacks selectKnownPacks) {
+        /* MCBotLib start */
         if (session.getFlag(MinecraftConstants.SEND_BLANK_KNOWN_PACKS_RESPONSE, true)) {
           session.send(new ServerboundSelectKnownPacks(Collections.emptyList()));
         } else {
@@ -199,8 +182,7 @@ public class BaseListener extends SessionAdapter {
         /* MCBotLib end */
       } else if (packet instanceof ClientboundTransferPacket transferPacket) {
         if (session.getFlag(MinecraftConstants.FOLLOW_TRANSFERS, true)) {
-          TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(),
-              transferPacket.getPort(), session.getPacketProtocol());
+          TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(), transferPacket.getPort(), session.getPacketProtocol());
           newSession.setFlags(session.getFlags());
           session.disconnect(Component.translatable("disconnect.transfer"));
           newSession.connect(true, true);
@@ -213,28 +195,25 @@ public class BaseListener extends SessionAdapter {
   public void connected(ConnectedEvent event) {
     Session session = event.getSession();
     MinecraftProtocol protocol = (MinecraftProtocol) session.getPacketProtocol();
-    ClientIntentionPacket intention =
-        new ClientIntentionPacket(protocol.getCodec().getProtocolVersion(), session.getHost(),
-            session.getPort(), switch (this.targetState) {
-          case LOGIN -> transferring ? HandshakeIntent.TRANSFER : HandshakeIntent.LOGIN;
-          case STATUS -> HandshakeIntent.STATUS;
-          default -> throw new IllegalStateException("Unexpected value: " + this.targetState);
-        });
+    ClientIntentionPacket intention = new ClientIntentionPacket(protocol.getCodec().getProtocolVersion(), session.getHost(), session.getPort(), switch (targetState) {
+      case LOGIN -> transferring ? HandshakeIntent.TRANSFER : HandshakeIntent.LOGIN;
+      case STATUS -> HandshakeIntent.STATUS;
+      default -> throw new IllegalStateException("Unexpected value: " + targetState);
+    });
 
     switch (this.targetState) {
       case LOGIN -> {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.LOGIN));
-        session.send(intention);
-        session.switchOutboundProtocol(() -> protocol.setOutboundState(ProtocolState.LOGIN));
+        session.send(intention, () -> protocol.setOutboundState(ProtocolState.LOGIN));
         GameProfile profile = session.getFlag(MinecraftConstants.PROFILE_KEY);
         session.send(new ServerboundHelloPacket(profile.getName(), profile.getId()));
       }
       case STATUS -> {
         session.switchInboundProtocol(() -> protocol.setInboundState(ProtocolState.STATUS));
-        session.send(intention);
-        session.switchOutboundProtocol(() -> protocol.setOutboundState(ProtocolState.STATUS));
+        session.send(intention, () -> protocol.setOutboundState(ProtocolState.STATUS));
         session.send(new ServerboundStatusRequestPacket());
       }
+      default -> throw new IllegalStateException("Unexpected value: " + targetState);
     }
   }
 }

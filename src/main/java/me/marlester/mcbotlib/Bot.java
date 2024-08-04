@@ -19,7 +19,6 @@
 
 package me.marlester.mcbotlib;
 
-import com.github.steveice10.mc.auth.data.GameProfile;
 import lombok.Getter;
 import me.marlester.mcbotlib.clientlisteners.BaseListener;
 import me.marlester.mcbotlib.clientlisteners.BrandListener;
@@ -28,6 +27,7 @@ import me.marlester.mcbotlib.clientlisteners.DisconnectListener;
 import me.marlester.mcbotlib.clientlisteners.PacketLogListener;
 import me.marlester.mcbotlib.clientlisteners.ResourcePackListener;
 import net.kyori.adventure.text.Component;
+import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.tcp.TcpClientSession;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
