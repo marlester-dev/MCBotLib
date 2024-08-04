@@ -48,7 +48,7 @@ public class BuiltInKnownPackRegistry {
     try (var gzipInputStream = new GZIPInputStream(byteArrayInputStream)) {
       var bytes = gzipInputStream.readAllBytes();
       var in = Unpooled.wrappedBuffer(bytes);
-      var helper = new MinecraftCodecHelper(Int2ObjectMaps.emptyMap(), Map.of());
+      var helper = new MinecraftCodecHelper();
       supportedPacks = helper.readList(in,
           buf -> new KnownPack(helper.readString(buf), helper.readString(buf),
               helper.readString(buf)));
