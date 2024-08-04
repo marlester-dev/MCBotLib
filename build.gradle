@@ -1,10 +1,10 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
 }
 
 group = 'me.marlester'
-version = '1.0.3-beta'
+version = '1.0.3'
 
 repositories {
     mavenCentral()
@@ -41,5 +41,5 @@ dependencies {
     compileOnly "org.jetbrains:annotations:24.1.0"
     compileOnly "org.projectlombok:lombok:1.18.32"
     annotationProcessor "org.projectlombok:lombok:1.18.32"
-    implementation "com.github.AlexProgrammerDE:MCProtocolLib:576b311"
+    api "com.github.AlexProgrammerDE:MCProtocolLib:576b311"
 }
