@@ -9,10 +9,10 @@ Adding the library with Gradle:
 ```groovy
 repositories {
     maven {
-        url "https://jitpack.io"
+        url 'https://jitpack.io'
     }
     maven {
-        url "https://repo.opencollab.dev/maven-releases/"
+        url 'https://repo.opencollab.dev/maven-releases/'
     }
 }
 
