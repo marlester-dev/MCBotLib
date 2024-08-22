@@ -79,10 +79,10 @@ public class BotSettings {
   private final int renderDistance = 1;
 
   /**
-   * The chat visibility setting for the bot. Defaults to HIDDEN.
+   * The chat visibility setting for the bot. Defaults to FULL.
    */
   @Builder.Default
-  private final ChatVisibility chatVisibility = ChatVisibility.HIDDEN;
+  private final ChatVisibility chatVisibility = ChatVisibility.FULL;
 
   /**
    * Whether the bot should use chat colors. Defaults to true.
