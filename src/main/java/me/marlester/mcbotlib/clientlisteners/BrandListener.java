@@ -22,7 +22,7 @@ package me.marlester.mcbotlib.clientlisteners;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import lombok.RequiredArgsConstructor;
-import me.marlester.mcbotlib.Bot;
+import me.marlester.mcbotlib.BotSession;
 import me.marlester.mcbotlib.protocol.ProtocolConstants;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
@@ -33,7 +33,7 @@ import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundG
 @RequiredArgsConstructor
 public class BrandListener extends SessionAdapter {
 
-  private final Bot bot;
+  private final BotSession bot;
 
   @Override
   public void packetReceived(Session session, Packet packet) {

@@ -20,7 +20,7 @@
 package me.marlester.mcbotlib.clientlisteners;
 
 import lombok.RequiredArgsConstructor;
-import me.marlester.mcbotlib.Bot;
+import me.marlester.mcbotlib.BotSession;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.event.session.PacketSendingEvent;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public class PacketLogListener extends SessionAdapter {
   private static final Logger LOG = LoggerFactory.getLogger(PacketLogListener.class);
 
-  private final Bot bot;
+  private final BotSession bot;
 
   @Override
   public void packetReceived(Session session, Packet packet) {

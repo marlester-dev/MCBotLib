@@ -20,7 +20,7 @@
 package me.marlester.mcbotlib.clientlisteners;
 
 import lombok.RequiredArgsConstructor;
-import me.marlester.mcbotlib.Bot;
+import me.marlester.mcbotlib.BotSession;
 import org.geysermc.mcprotocollib.network.event.session.DisconnectedEvent;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class DisconnectListener extends SessionAdapter {
   private static final Logger LOG = LoggerFactory.getLogger(DisconnectListener.class);
 
-  private final Bot bot;
+  private final BotSession bot;
 
   @Override
   public void disconnected(DisconnectedEvent event) {

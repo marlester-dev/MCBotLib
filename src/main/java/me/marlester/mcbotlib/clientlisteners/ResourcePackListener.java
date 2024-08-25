@@ -20,7 +20,7 @@
 package me.marlester.mcbotlib.clientlisteners;
 
 import lombok.RequiredArgsConstructor;
-import me.marlester.mcbotlib.Bot;
+import me.marlester.mcbotlib.BotSession;
 import me.marlester.mcbotlib.utils.ResourcePackUtils;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
@@ -36,7 +36,7 @@ import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.Serverbound
 @RequiredArgsConstructor
 public class ResourcePackListener extends SessionAdapter {
 
-  private final Bot bot;
+  private final BotSession bot;
 
   @Override
   public void packetReceived(Session session, Packet packet) {
