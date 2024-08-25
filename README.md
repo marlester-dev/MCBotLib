@@ -46,7 +46,6 @@ bot.connect();
 
 [Adding authentication details to the bot](https://github.com/marlester-dev/MCBotLib/wiki/Adding-auth-details)  
 [Adding proxy to the bot](https://github.com/marlester-dev/MCBotLib/wiki/Adding-proxy)  
-[Getting the Session and Protocol of the bot](https://github.com/marlester-dev/MCBotLib/wiki/Getting-the-Session-and-Protocol-of-the-bot)
 
 For more please see the javadoc and MCProtocolLib's wiki.  
 Don't be shy to ask questions in the issues tab.  
