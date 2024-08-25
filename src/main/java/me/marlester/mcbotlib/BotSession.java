@@ -14,6 +14,10 @@ import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.data.ProtocolState;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Extension of {@link TcpClientSession}.
+ * Basically the bot class.
+ */
 public class BotSession extends TcpClientSession {
 
   @NotNull
