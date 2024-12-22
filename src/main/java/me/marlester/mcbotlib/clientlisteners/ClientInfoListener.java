@@ -25,7 +25,7 @@ import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundClientInformationPacket;
-import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundGameProfilePacket;
+import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundLoginFinishedPacket;
 
 @RequiredArgsConstructor
 public class ClientInfoListener extends SessionAdapter {
@@ -34,7 +34,7 @@ public class ClientInfoListener extends SessionAdapter {
 
   @Override
   public void packetReceived(Session session, Packet packet) {
-    if (!(packet instanceof ClientboundGameProfilePacket)) {
+    if (!(packet instanceof ClientboundLoginFinishedPacket)) {
       return;
     }
     var settings = bot.getSettings();
@@ -46,7 +46,8 @@ public class ClientInfoListener extends SessionAdapter {
         settings.getVisibleSkinParts(),
         settings.getHandPreference(),
         settings.isTextFiltering(),
-        settings.isAllowsListing()
+        settings.isAllowsListing(),
+        settings.getParticleStatus()
     ));
   }
 }

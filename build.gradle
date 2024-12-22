@@ -41,5 +41,5 @@ dependencies {
     compileOnly 'org.jetbrains:annotations:24.1.0'
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
-    api 'com.github.AlexProgrammerDE:MCProtocolLib:5d90ce15'
+    api 'org.geysermc.mcprotocollib:protocol:1.21.4-SNAPSHOT'
 }

@@ -26,6 +26,7 @@ import lombok.Getter;
 import org.geysermc.mcprotocollib.network.ProxyInfo;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.HandPreference;
 import org.geysermc.mcprotocollib.protocol.data.game.setting.ChatVisibility;
+import org.geysermc.mcprotocollib.protocol.data.game.setting.ParticleStatus;
 import org.geysermc.mcprotocollib.protocol.data.game.setting.SkinPart;
 import org.jetbrains.annotations.Nullable;
 
@@ -101,6 +102,12 @@ public class BotSettings {
    */
   @Builder.Default
   private final HandPreference handPreference = HandPreference.RIGHT_HAND;
+
+  /**
+   * How many particles the client will render. Defaults to ParticleStatus.ALL
+   */
+  @Builder.Default
+  private final ParticleStatus particleStatus = ParticleStatus.ALL;
 
   /**
    * Whether text filtering is enabled for the bot. Defaults to true.

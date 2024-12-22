@@ -20,8 +20,10 @@
 package me.marlester.mcbotlib.clientlisteners;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.Objects;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,10 @@ import net.kyori.adventure.text.Component;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.SessionService;
 import org.geysermc.mcprotocollib.network.Session;
+import org.geysermc.mcprotocollib.network.compression.CompressionConfig;
+import org.geysermc.mcprotocollib.network.compression.ZlibCompression;
 import org.geysermc.mcprotocollib.network.crypt.AESEncryption;
+import org.geysermc.mcprotocollib.network.crypt.EncryptionConfig;
 import org.geysermc.mcprotocollib.network.event.session.ConnectedEvent;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
 import org.geysermc.mcprotocollib.network.packet.Packet;
@@ -58,16 +63,16 @@ import org.geysermc.mcprotocollib.protocol.packet.configuration.serverbound.Serv
 import org.geysermc.mcprotocollib.protocol.packet.handshake.serverbound.ClientIntentionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundStartConfigurationPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundConfigurationAcknowledgedPacket;
-import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundGameProfilePacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundHelloPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundLoginCompressionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundLoginDisconnectPacket;
+import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundLoginFinishedPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundHelloPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundKeyPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundLoginAcknowledgedPacket;
-import org.geysermc.mcprotocollib.protocol.packet.status.clientbound.ClientboundPongResponsePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ping.clientbound.ClientboundPongResponsePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ping.serverbound.ServerboundPingRequestPacket;
 import org.geysermc.mcprotocollib.protocol.packet.status.clientbound.ClientboundStatusResponsePacket;
-import org.geysermc.mcprotocollib.protocol.packet.status.serverbound.ServerboundPingRequestPacket;
 import org.geysermc.mcprotocollib.protocol.packet.status.serverbound.ServerboundStatusRequestPacket;
 
 /**
@@ -88,7 +93,7 @@ public class BaseListener extends SessionAdapter {
         GameProfile profile = session.getFlag(MinecraftConstants.PROFILE_KEY);
         String accessToken = session.getFlag(MinecraftConstants.ACCESS_TOKEN_KEY);
 
-        if (profile == null || accessToken == null) {
+        if ((profile == null || accessToken == null) && helloPacket.isShouldAuthenticate()) {
           throw new UnexpectedEncryptionException();
         }
 
@@ -106,25 +111,35 @@ public class BaseListener extends SessionAdapter {
 
         // TODO: Add generic error, disabled multiplayer and banned from playing online errors
         try {
-          sessionService.joinServer(profile, accessToken, serverId);
+          if (helloPacket.isShouldAuthenticate()) {
+            sessionService.joinServer(Objects.requireNonNull(profile, "final shouldAuthenticate changed value?"), accessToken, serverId);
+          }
         } catch (IOException e) {
           session.disconnect(Component.translatable("disconnect.loginFailedInfo", Component.text(e.getMessage())), e);
           return;
         }
 
         // mcbotlib start
-        var keyPacket = new ServerboundKeyPacket(helloPacket.getPublicKey(), key,
-            helloPacket.getChallenge());
-        var encryption = new AESEncryption(key);
-        session.send(keyPacket, () -> session.enableEncryption(encryption));
+        session.send(new ServerboundKeyPacket(helloPacket.getPublicKey(), key, helloPacket.getChallenge()),
+                () -> {
+					try {
+						session.setEncryption(new EncryptionConfig(new AESEncryption(key)));
+					} catch (GeneralSecurityException e) {
+                      throw new IllegalStateException("Failed to create protocol encryption.", e);
+					}
+				});
         // mcbotlib end
-      } else if (packet instanceof ClientboundGameProfilePacket) {
+      } else if (packet instanceof ClientboundLoginFinishedPacket) {
         session.switchInboundState(() -> protocol.setInboundState(ProtocolState.CONFIGURATION));
-        session.send(new ServerboundLoginAcknowledgedPacket(), () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
+        session.send(new ServerboundLoginAcknowledgedPacket());
+        session.switchOutboundState(() -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
       } else if (packet instanceof ClientboundLoginDisconnectPacket loginDisconnectPacket) {
         session.disconnect(loginDisconnectPacket.getReason());
       } else if (packet instanceof ClientboundLoginCompressionPacket loginCompressionPacket) {
-        session.setCompressionThreshold(loginCompressionPacket.getThreshold(), false);
+        int threshold = loginCompressionPacket.getThreshold();
+        if (threshold >= 0) {
+          session.setCompression(new CompressionConfig(threshold, new ZlibCompression(), false));
+        }
       }
     } else if (protocol.getInboundState() == ProtocolState.STATUS) {
       if (packet instanceof ClientboundStatusResponsePacket statusResponsePacket) {
@@ -151,7 +166,8 @@ public class BaseListener extends SessionAdapter {
         session.disconnect(disconnectPacket.getReason());
       } else if (packet instanceof ClientboundStartConfigurationPacket) {
         session.switchInboundState(() -> protocol.setInboundState(ProtocolState.CONFIGURATION));
-        session.send(new ServerboundConfigurationAcknowledgedPacket(), () -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
+        session.send(new ServerboundConfigurationAcknowledgedPacket());
+        session.switchOutboundState(() -> protocol.setOutboundState(ProtocolState.CONFIGURATION));
       } else if (packet instanceof ClientboundTransferPacket transferPacket) {
         if (session.getFlag(MinecraftConstants.FOLLOW_TRANSFERS, true)) {
           TcpClientSession newSession = new TcpClientSession(transferPacket.getHost(), transferPacket.getPort(), session.getPacketProtocol());
@@ -169,14 +185,15 @@ public class BaseListener extends SessionAdapter {
         session.send(new ServerboundKeepAlivePacket(keepAlivePacket.getPingId()));
       } else if (packet instanceof ClientboundFinishConfigurationPacket) {
         session.switchInboundState(() -> protocol.setInboundState(ProtocolState.GAME));
-        session.send(new ServerboundFinishConfigurationPacket(), () -> protocol.setOutboundState(ProtocolState.GAME));
-      } else if (packet instanceof ClientboundSelectKnownPacks selectKnownPacks) {
+        session.send(new ServerboundFinishConfigurationPacket());
+        session.switchOutboundState(() -> protocol.setOutboundState(ProtocolState.GAME));
+      } else if (packet instanceof ClientboundSelectKnownPacks) {
         // mcbotlib start
         if (session.getFlag(MinecraftConstants.SEND_BLANK_KNOWN_PACKS_RESPONSE, true)) {
           session.send(new ServerboundSelectKnownPacks(Collections.emptyList()));
         } else {
           session.send(new ServerboundSelectKnownPacks(BuiltInKnownPackRegistry.INSTANCE
-              .getMatchingPacks(selectKnownPacks.getKnownPacks())));
+                  .getMatchingPacks(((ClientboundSelectKnownPacks) packet).getKnownPacks())));
         }
         // mcbotlib end
       } else if (packet instanceof ClientboundTransferPacket transferPacket) {
@@ -201,7 +218,8 @@ public class BaseListener extends SessionAdapter {
     });
 
     session.switchInboundState(() -> protocol.setInboundState(this.targetState));
-    session.send(intention, () -> protocol.setOutboundState(this.targetState));
+    session.send(intention);
+    session.switchOutboundState(() -> protocol.setOutboundState(this.targetState));
     switch (this.targetState) {
       case LOGIN -> {
         GameProfile profile = session.getFlag(MinecraftConstants.PROFILE_KEY);

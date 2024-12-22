@@ -28,7 +28,7 @@ import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundCustomPayloadPacket;
-import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundGameProfilePacket;
+import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundLoginFinishedPacket;
 
 @RequiredArgsConstructor
 public class BrandListener extends SessionAdapter {
@@ -37,7 +37,7 @@ public class BrandListener extends SessionAdapter {
 
   @Override
   public void packetReceived(Session session, Packet packet) {
-    if (!(packet instanceof ClientboundGameProfilePacket)) {
+    if (!(packet instanceof ClientboundLoginFinishedPacket)) {
       return;
     }
     var buf = Unpooled.buffer();
